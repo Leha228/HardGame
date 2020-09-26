@@ -7,8 +7,8 @@ using UnityEngine.EventSystems;
 using Assets.Scripts;
 class AliveObject : IMoving, IAlive
 {
-    private IAlive aliveManager;
-    private IMoving movingManager;
+    private readonly IAlive aliveManager;
+    private readonly IMoving movingManager;
     private Transform transform;
     private float health;
     private float maxHealth;
