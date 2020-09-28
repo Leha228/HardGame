@@ -8,10 +8,10 @@ namespace Assets.Scripts
 {
     interface IAlive
     {
-        public float Health { get; set; }
-        public bool isAlive { get; }
-        public float MaxHealth { get; set; }
-        public void onAcceptDamage(float damage);
-        public void onHealing(float health);
+         float Health { get; set; }
+         bool IsAlive { get; }
+         float MaxHealth { get; set; }
+         void OnAcceptDamage(float damage);
+         void OnHealing(float health);
     }
 }
