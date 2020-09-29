@@ -26,6 +26,7 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
 
     private void Start()
     {
+        
         this.characterController = GetComponent<CharacterController>();
         this.body = GetComponent<Rigidbody>();
         if (this.playerCamera == null)
@@ -112,9 +113,8 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
                 jumpMoveDirection.y = -1f;
 
             jumpMoveDirection.y = Mathf.Sqrt(JumpForce * -2f * gravity) * jump;
-
-        }
-        jumpMoveDirection.y += gravity;
+        }else
+            jumpMoveDirection.y += gravity;
         print($"jumpDir - {jumpMoveDirection}");
         characterController.Move(jumpMoveDirection);
 
