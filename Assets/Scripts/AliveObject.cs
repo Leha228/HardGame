@@ -10,27 +10,27 @@ using System.Runtime.CompilerServices;
 class AliveObject : MonoBehaviour, IHandlingAliveObject
 {
     private CharacterController characterController;
-    private Rigidbody body;
     [SerializeField] private float gravity = -9.81f;
     [SerializeField] private Camera playerCamera;
     [SerializeField] private float health = 20;
     [SerializeField] private float maxHealth = 20;
+    [SerializeField] private float distanceToGround = 0.5f;
+    [SerializeField] private LayerMask groundLayerMask;
+     private float _jumpForce = 1.5f;
     [SerializeField] public float WalkSpeed { get; set; } = 1;
     [SerializeField] public float RunSpeed { get; set; } = 3;
     [SerializeField] public float LowHealthSpeed { get; set; } = 0.7f;
-    [SerializeField] public float JumpForce { get; set; } = 5f;
     [SerializeField] public float MouseSense { get; set; } = 2;
-    [SerializeField] public float MaxHealth { get => this.maxHealth; set => this.maxHealth = value; }
-    [SerializeField] public bool IsAlive => this.health > 0;
+    public float MaxHealth { get => this.maxHealth; set => this.maxHealth = value; }
+    public bool IsAlive => this.health > 0;
+    private bool IsOnGround => Physics.CheckCapsule(this.transform.position, this.transform.position - (Vector3.down*distanceToGround), Mathf.Max(this.transform.localScale.x,this.transform.localScale.y),this.groundLayerMask);
     private Vector3 jumpMoveDirection = Vector3.zero;
 
     private void Start()
     {
         this.characterController = GetComponent<CharacterController>();
-        this.body = GetComponent<Rigidbody>();
         if (this.playerCamera == null)
             this.playerCamera = Camera.main;
-
         this.MoveTo(Vector3.zero);
     }
 
@@ -51,7 +51,18 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
             }
         }
     }
-    
+    [SerializeField] public float JumpForce
+    {
+        get
+        {
+            return this._jumpForce;
+        }
+        set
+        {
+            this._jumpForce = Mathf.Abs(value);
+        }
+    }
+
     public MovingState MovingState {
         get
         {
@@ -104,17 +115,16 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
     {
         
         var jump = Input.GetAxis("Jump");
-        print($"jump - {jump}");
 
-        if (characterController.isGrounded)
+        if (this.IsOnGround)
         {
-            if (jumpMoveDirection.y < 0)
-                jumpMoveDirection.y = -1f;
-
-            jumpMoveDirection.y = Mathf.Sqrt(JumpForce * -2f * gravity) * jump;
-
+            print($"jumpforce - {JumpForce}");
+            if (jumpMoveDirection.y <= 0)
+                jumpMoveDirection.y = JumpForce * jump;
         }
-        jumpMoveDirection.y += gravity;
+        else
+            jumpMoveDirection.y += gravity*0.01f;
+
         print($"jumpDir - {jumpMoveDirection}");
         characterController.Move(jumpMoveDirection);
 

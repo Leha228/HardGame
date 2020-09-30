@@ -409,6 +409,10 @@ MonoBehaviour:
   playerCamera: {fileID: 0}
   health: 17.8
   maxHealth: 22
+  distanceToGround: 0.5
+  groundLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!143 &1276325303
 CharacterController:
   m_ObjectHideFlags: 0
@@ -495,7 +499,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1276325301}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 71.9, y: 30.1, z: 59.75}
+  m_LocalPosition: {x: 72.35, y: 127.3, z: 57.51}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
