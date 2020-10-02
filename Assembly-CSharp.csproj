@@ -65,6 +65,7 @@
   <ItemGroup>
     <Compile Include="Assets\Scripts\AliveObject.cs" />
     <Compile Include="Assets\Scripts\EnumMovingStates.cs" />
+    <Compile Include="Assets\Scripts\EventDelegates.cs" />
     <Compile Include="Assets\Scripts\IAlive.cs" />
     <Compile Include="Assets\Scripts\IHandlingAliveObject.cs" />
     <Reference Include="UnityEngine">
