@@ -57,7 +57,7 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
     public float RunSpeed { get => this._runSpeed; set => this._runSpeed = value; }
     public float LowHealthSpeed { get => this._lowHealthSpeed; set => this._lowHealthSpeed = value; }
     public bool IsAlive => this._health > 0;
-    private bool IsOnGround => Physics.CheckCapsule(this.transform.position, this.transform.position - (Vector3.down*distanceToGround), Mathf.Max(this.transform.localScale.x,this.transform.localScale.y),this.groundLayerMask);
+    private bool IsOnGround => Physics.CheckCapsule(this.transform.position, new Vector3(0,this.transform.position.y - this.transform.localScale.y - distanceToGround), Mathf.Max(this.transform.localScale.x,this.transform.localScale.y),this.groundLayerMask);
     public MovingState MovingState
     {
         get
@@ -146,17 +146,18 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
     {
         var jump = Input.GetAxis("Jump");
 
-        if (this.IsOnGround && jumpMoveDirection.y <= 0)
-            jumpMoveDirection.y = JumpForce * jump;
+        if (this.IsOnGround && jumpMoveDirection.y <= -1)
+            if (jump == 1)
+                jumpMoveDirection.y = JumpForce * jump;
+            else 
+                jumpMoveDirection.y = -1;
         else
         {
             // игрок летит вниз с увеличением скорости
             jumpMoveDirection.y += gravity * 0.01f;
-
             // до достижения скорости в половину от гравитации он ускоряется 
             if (jumpMoveDirection.y < gravity * 0.5f)
                 jumpMoveDirection.y = gravity * 0.4f;
-                
         }
 
         characterController.Move(jumpMoveDirection);
@@ -181,12 +182,12 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
     {
             var hor = Input.GetAxis("Horizontal");
             var ver = Input.GetAxis("Vertical");
-
-            var speed = GetMoveSpeedFromState(this.MovingState);
-            print($"speed - {speed}");
-            Vector3 moveDirection = new Vector3(hor * speed, 0.0f, ver * speed);
-            
-            this.characterController.Move(moveDirection);
+            if (this.IsOnGround){
+                var speed = GetMoveSpeedFromState(this.MovingState);
+                print($"speed - {speed}");
+                Vector3 moveDirection = new Vector3(hor * speed, 0.0f, ver * speed);
+                this.characterController.Move(moveDirection);
+            }
             this.Jump();
     }
 
