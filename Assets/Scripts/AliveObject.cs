@@ -6,24 +6,31 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using Assets.Scripts;
 using System.Runtime.CompilerServices;
+using UnityEditor.UIElements;
 
 class AliveObject : MonoBehaviour, IHandlingAliveObject
 {
-    private CharacterController characterController;
-    private Rigidbody body;
-    [SerializeField] private float gravity = -9.81f;
+    [Header("Main settings")]
+    [SerializeField] private CharacterController characterController = null;
     [SerializeField] private Camera playerCamera;
-    [SerializeField] private float health = 20;
-    [SerializeField] private float maxHealth = 20;
-    [SerializeField] public float WalkSpeed { get; set; } = 1;
-    [SerializeField] public float RunSpeed { get; set; } = 3;
-    [SerializeField] public float LowHealthSpeed { get; set; } = 0.7f;
-    [SerializeField] public float JumpForce { get; set; } = 5f;
-    [SerializeField] public float MouseSense { get; set; } = 2;
-    [SerializeField] public float MaxHealth { get => this.maxHealth; set => this.maxHealth = value; }
-    [SerializeField] public bool IsAlive => this.health > 0;
+    [SerializeField] private float gravity = -9.81f;
+    [SerializeField] private LayerMask groundLayerMask = 2;
+    [SerializeField] private float distanceToGround = 0.5f;
+
+    [Header("Player parameters")]
+    [SerializeField] private float _mouseSense = 2;
+    [SerializeField] private float _health = 20;
+    [SerializeField] private float _maxHealth = 20;
+    [SerializeField] private float _jumpForce = 1.5f;
+    [SerializeField] private float _lowHealthJumpForce = 1.5f;
+    [SerializeField] private float _walkSpeed = 1f;
+    [SerializeField] private float _runSpeed = 2.5f;
+    [SerializeField] private float _lowHealthSpeed = 0.5f;
+
+    // Внутренние переменные
     private Vector3 jumpMoveDirection = Vector3.zero;
 
+<<<<<<< HEAD
     private void Start()
     {
         
@@ -31,38 +38,67 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
         this.body = GetComponent<Rigidbody>();
         if (this.playerCamera == null)
             this.playerCamera = Camera.main;
+=======
+    // Свойства
+>>>>>>> SSaNyAS
 
-        this.MoveTo(Vector3.zero);
+    public float MouseSense { get => this._mouseSense; set => this._mouseSense = value; }
+    public float Health
+    {
+        get => _health;
+        set
+        {
+            if (this._health < value)
+            {
+                this.OnHealing(Math.Abs(this._health - value));
+            }
+            else
+            {
+                this.OnAcceptDamage(Math.Abs(this._health - value));
+            }
+        }
+    }
+
+    public float MaxHealth { get => this._maxHealth; set => this._maxHealth = value; }
+    public float JumpForce { get => this._jumpForce; set => this._jumpForce = Mathf.Abs(value); }
+    public float LowHealthJumpForce { get => _lowHealthJumpForce; set => this._lowHealthJumpForce = value; }
+    public float CurrentMoveSpeed => GetMoveSpeedFromState(MovingState);
+    public float WalkSpeed { get => this._walkSpeed; set => this._walkSpeed = value; }
+    public float RunSpeed { get => this._runSpeed; set => this._runSpeed = value; }
+    public float LowHealthSpeed { get => this._lowHealthSpeed; set => this._lowHealthSpeed = value; }
+    public bool IsAlive => this._health > 0;
+    private bool IsOnGround => Physics.CheckCapsule(this.transform.position, new Vector3(0,this.transform.position.y - this.transform.localScale.y - distanceToGround), Mathf.Max(this.transform.localScale.x,this.transform.localScale.y),this.groundLayerMask);
+    public MovingState MovingState
+    {
+        get
+        {
+            if (this.Health < this.MaxHealth * 0.15)
+                return MovingState.slowWalk;
+            else
+                return MovingState.walk;
+        }
+    }
+
+    // События
+    public event EventDelegates.onHealthChanged OnHealthChangedEvent;
+    public event EventDelegates.onMoveSpeedChanged OnMoveSpeedChangedEvent;
+    public event EventDelegates.onDeath OnDeathEvent;
+    public event EventDelegates.onHealing OnHealingEvent;
+    public event EventDelegates.onAcceptDamage OnAcceptDamageEvent;
+
+    private void Start()
+    {
+        if (this.characterController == null)
+            this.characterController = GetComponent<CharacterController>();
+        if (this.playerCamera == null)
+            this.playerCamera = Camera.main;
     }
 
     private void FixedUpdate()
     {
         this.Move();
     }
-
-    public float Health {
-        get => health;
-        set {
-            if (this.health < value) {
-                this.OnHealing(Math.Abs(this.health - value));
-            }
-            else
-            {
-                this.OnAcceptDamage(Math.Abs(this.health - value));
-            }
-        }
-    }
-    
-    public MovingState MovingState {
-        get
-        {
-            if (this.health < this.health * 0.15)
-                return MovingState.slowWalk;
-            else
-                return MovingState.walk;
-        }
-    }
-        
+            
     public void MoveTo(Vector3 position)
     {
         this.transform.Translate(position);
@@ -70,32 +106,47 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
 
     public void OnAcceptDamage(float damage)
     {
-        float damageValue = Math.Abs(damage);
-        this.health -= damageValue;
-        this.health = this.health < 0 ? 0 : this.health;
+        float newHealthValue = Health - Math.Abs(damage); ;
+        newHealthValue = Math.Max(0, newHealthValue);
+
+        if (newHealthValue != Health)
+        {
+            this._health = newHealthValue;
+            OnHealthChangedEvent?.Invoke(Health);
+            OnAcceptDamageEvent?.Invoke(Math.Abs(damage));
+            if (IsAlive == false)
+                OnDeathEvent?.Invoke();
+        }
     }
 
     public void OnHealing(float health)
     {
-        float healingValue = Math.Abs(health);
-        this.health += healingValue;
-        this.health = this.health > this.maxHealth ? this.maxHealth : this.health;
+        float newHealthValue = Health + Math.Abs(health); 
+        newHealthValue = Math.Min(newHealthValue,MaxHealth);
+
+        if (newHealthValue != Health)
+        {
+            OnHealingEvent?.Invoke(newHealthValue);
+            this._health = newHealthValue;
+
+            OnHealthChangedEvent?.Invoke(Health);
+        }
     }
 
-    public float CurrentMoveSpeed(MovingState currentState)
+    public float GetMoveSpeedFromState(MovingState currentState)
     {
         switch (currentState)
         {
+            case MovingState.jump:
+                return this.JumpForce;
             case MovingState.run:
                 return this.RunSpeed;
+            case MovingState.walk:
+                return this.WalkSpeed;
             case MovingState.slowWalk:
                 return this.LowHealthSpeed;
             case MovingState.slowRun:
                 return this.LowHealthSpeed * 1.2f;
-            case MovingState.jump:
-                return this.JumpForce;
-            case MovingState.walk:
-                return this.WalkSpeed;
             default:
                 return this.WalkSpeed * 0.8f;
         }
@@ -103,12 +154,16 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
 
     public void Jump()
     {
-        
         var jump = Input.GetAxis("Jump");
-        print($"jump - {jump}");
 
-        if (characterController.isGrounded)
+        if (this.IsOnGround && jumpMoveDirection.y <= -1)
+            if (jump == 1)
+                jumpMoveDirection.y = JumpForce * jump;
+            else 
+                jumpMoveDirection.y = -1;
+        else
         {
+<<<<<<< HEAD
             if (jumpMoveDirection.y < 0)
                 jumpMoveDirection.y = -1f;
 
@@ -117,7 +172,16 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
             jumpMoveDirection.y += gravity;
         print($"jumpDir - {jumpMoveDirection}");
         characterController.Move(jumpMoveDirection);
+=======
+            // игрок летит вниз с увеличением скорости
+            jumpMoveDirection.y += gravity * 0.01f;
+            // до достижения скорости в половину от гравитации он ускоряется 
+            if (jumpMoveDirection.y < gravity * 0.5f)
+                jumpMoveDirection.y = gravity * 0.4f;
+        }
+>>>>>>> SSaNyAS
 
+        characterController.Move(jumpMoveDirection);
     }
 
     public void Seat()
@@ -137,18 +201,15 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
 
     public void Move()
     {
-        
             var hor = Input.GetAxis("Horizontal");
             var ver = Input.GetAxis("Vertical");
-
-            var speed = CurrentMoveSpeed(this.MovingState);
-            print($"speed - {speed}");
-            Vector3 moveDirection = new Vector3(hor * speed, 0.0f, ver * speed);
-            
-            this.characterController.Move(moveDirection);
+            if (this.IsOnGround){
+                var speed = GetMoveSpeedFromState(this.MovingState);
+                print($"speed - {speed}");
+                Vector3 moveDirection = new Vector3(hor * speed, 0.0f, ver * speed);
+                this.characterController.Move(moveDirection);
+            }
             this.Jump();
-        
-        this.MoveCamera(new Vector3(this.transform.position.x - 15, this.transform.position.y + 2, this.transform.position.z + 15));
     }
 
     public void MoveCamera(Vector3 position)
