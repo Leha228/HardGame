@@ -30,18 +30,6 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
     // Внутренние переменные
     private Vector3 jumpMoveDirection = Vector3.zero;
 
-<<<<<<< HEAD
-    private void Start()
-    {
-        
-        this.characterController = GetComponent<CharacterController>();
-        this.body = GetComponent<Rigidbody>();
-        if (this.playerCamera == null)
-            this.playerCamera = Camera.main;
-=======
-    // Свойства
->>>>>>> SSaNyAS
-
     public float MouseSense { get => this._mouseSense; set => this._mouseSense = value; }
     public float Health
     {
@@ -163,24 +151,13 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
                 jumpMoveDirection.y = -1;
         else
         {
-<<<<<<< HEAD
-            if (jumpMoveDirection.y < 0)
-                jumpMoveDirection.y = -1f;
 
-            jumpMoveDirection.y = Mathf.Sqrt(JumpForce * -2f * gravity) * jump;
-        }else
-            jumpMoveDirection.y += gravity;
-        print($"jumpDir - {jumpMoveDirection}");
-        characterController.Move(jumpMoveDirection);
-=======
             // игрок летит вниз с увеличением скорости
             jumpMoveDirection.y += gravity * 0.01f;
             // до достижения скорости в половину от гравитации он ускоряется 
             if (jumpMoveDirection.y < gravity * 0.5f)
                 jumpMoveDirection.y = gravity * 0.4f;
         }
->>>>>>> SSaNyAS
-
         characterController.Move(jumpMoveDirection);
     }
 
