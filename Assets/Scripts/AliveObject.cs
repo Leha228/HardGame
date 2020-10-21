@@ -6,7 +6,6 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using Assets.Scripts;
 using System.Runtime.CompilerServices;
-using UnityEditor.UIElements;
 
 class AliveObject : MonoBehaviour, IHandlingAliveObject
 {
@@ -57,7 +56,7 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
     public float RunSpeed { get => this._runSpeed; set => this._runSpeed = value; }
     public float LowHealthSpeed { get => this._lowHealthSpeed; set => this._lowHealthSpeed = value; }
     public bool IsAlive => this._health > 0;
-    private bool IsOnGround => Physics.CheckCapsule(this.transform.position, new Vector3(0,this.transform.position.y - this.transform.localScale.y - distanceToGround), Mathf.Max(this.transform.localScale.x,this.transform.localScale.y),this.groundLayerMask);
+    private bool IsOnGround => Physics.CheckCapsule(this.transform.position, new Vector3(0,(this.transform.position.y - this.characterController.height) + distanceToGround), Mathf.Max(this.transform.localScale.x,this.transform.localScale.y),this.groundLayerMask);
     public MovingState MovingState
     {
         get
@@ -182,12 +181,23 @@ class AliveObject : MonoBehaviour, IHandlingAliveObject
     {
             var hor = Input.GetAxis("Horizontal");
             var ver = Input.GetAxis("Vertical");
+
+            var mouseX = Input.GetAxis("Mouse X");
+            var mouseY = Input.GetAxis("Mouse Y");
+
             if (this.IsOnGround){
                 var speed = GetMoveSpeedFromState(this.MovingState);
                 print($"speed - {speed}");
                 Vector3 moveDirection = new Vector3(hor * speed, 0.0f, ver * speed);
                 this.characterController.Move(moveDirection);
+                
             }
+
+            var xRotate =  this.playerCamera.transform.eulerAngles.y + mouseX*MouseSense;
+            var yRotate = this.playerCamera.transform.eulerAngles.x + -mouseY*MouseSense;
+        
+            var newCameraQuaternion = Quaternion.Euler(yRotate,xRotate,0);
+            this.playerCamera.transform.localRotation = this.playerCamera.transform.localRotation * Quaternion.AngleAxis(mouseX*MouseSense, Vector3.up) * Quaternion.AngleAxis(mouseY*MouseSense, Vector3.left);
             this.Jump();
     }
 
